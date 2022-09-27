@@ -1,6 +1,12 @@
 import numpy as np
 import torch
 from tensor import Tensor
+
+"""
+out = x@w
+out_relu = out.
+"""
+
 np.random.seed(42)
 
 x = np.random.randn(1,3).astype(np.float32)

@@ -1,33 +1,18 @@
-# tensor 
-# github https://github
-"""
-write a deep learning frame  like pytorch
-name anet ,it means a net 
-"""
+##############################
+# 学着实现一个深度学习框架 anet
+#############################
+
 from functools import partialmethod
 import numpy as np
 
-"""
-input: x
-output: y
-model: f
-y = f(x)
-y = activation(wx + b)
-
-z = wx + b
-activation: g
-y = g(z) 
-
-l/y l/z * l/x = l/z z/x = l/zw
-grad * local_grad operator
-loss is scalar
-loss.backward()
-
-"""
-
+# 反向传播环境类
 class Context:
     def __init__(self,arg,*tensors):
-
+        """
+        arg:Function 运算符、例如 Sum、Dot 等继承了 Function 的
+        parents:Tensor : 参与运算的元素
+        parents:ndarray
+        """
         self.arg = arg
         self.parents = tensors
         self.saved_tensors=[]
@@ -36,45 +21,6 @@ class Context:
         self.saved_tensors.extend(x)
 
 
-
-"""
-
-basic Operator,other operator is subclass of it
-"""
-class Function:
-    """
-    arg 
-    *x
-    """
-    def apply(self,arg,*x):
-        # initial Context
-        # self is instance of Tensori
-        # arg - sum, self- tensor
-        # y = wx dot dot x.dot(w) self- x *x- w 
-        ctx = Context(arg,self,*x)
-        # dot.forward
-        ret = Tensor(arg.forward(ctx, self.data,*[t.data for t in x]))
-        ret._ctx = ctx
-        return ret
-
-def register(name,fxn):
-
-    # set method to Tensor cls
-    # sum.apply (fxn) (*x
-    setattr(Tensor,name,partialmethod(fxn.apply,fxn))
-
-        
-"""
-Tensor 
-grad_fn
-requires_grad
-
-pytorch
-t1 = Tensor([1,2,3])
-print(t1)
-t1.shape 
-t1.backward()
-"""
 
 class Tensor:
     def __init__(self,data,_children=()):
@@ -112,10 +58,39 @@ class Tensor:
                 #assert(False) "print something"
             t.grad = g
             t.backward(False)
-        def mean(self):
-            div = Tensor(np.array([1/self.data.size]))
-            return self.sum().mul(div)
+    def mean(self):
+        div = Tensor(np.array([1/self.data.size]))
+        return self.sum().mul(div)
 
+"""
+运算符的基类
+"""
+class Function:
+    """
+    arg:Function
+
+    """
+    def apply(self:Tensor,arg,*x):
+        # initial Context
+        # self is instance of Tensori
+        # arg - sum, self- tensor
+        # y = wx dot dot x.dot(w) self- x *x- w 
+        ctx = Context(arg,self,*x)
+        # dot.forward
+        ret = Tensor(arg.forward(ctx, self.data,*[t.data for t in x]))
+        ret._ctx = ctx
+        return ret
+
+def register(name,fxn):
+
+    # set method to Tensor cls
+    # sum.apply (fxn) (*x
+    setattr(Tensor,name,partialmethod(fxn.apply,fxn))
+
+        
+"""
+
+"""
 class ReLU(Function):
     @staticmethod
     def forward(ctx, input):
@@ -153,17 +128,11 @@ class Dot(Function):
 register("dot",Dot)
 
 """
-forward: c = a + b
-backward: partial c/a = 1
-
-t1 = [1,2,3]
-t1.sum() 6
-
+求和
 """
 class Sum(Function):
     @staticmethod
     def forward(ctx, input):
-        print(f"type of sum input {type(input)}")
         ctx.save_for_backward(input)
         return np.array([input.sum()])
 
@@ -171,12 +140,12 @@ class Sum(Function):
     def backward(ctx,grad_output):
         # grad_output * local grad
         input, = ctx.saved_tensors
-        print(input.shape)
-        print(grad_output * np.ones_like(input))
         return grad_output * np.ones_like(input)
 
 register("sum",Sum)
-
+"""
+logSoftmax
+"""
 class LogSoftmax(Function):
     @staticmethod
     def forward(ctx, input):
