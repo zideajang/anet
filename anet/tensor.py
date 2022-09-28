@@ -5,27 +5,11 @@
 from functools import partialmethod
 import numpy as np
 
-# 反向传播环境类
-class Context:
-    def __init__(self,arg,*tensors):
-        """
-        arg:Function 运算符、例如 Sum、Dot 等继承了 Function 的
-        parents:Tensor : 参与运算的元素
-        parents:ndarray
-        """
-        self.arg = arg
-        self.parents = tensors
-        self.saved_tensors=[]
+# basic classes
 
-    def save_for_backward(self,*x):
-        self.saved_tensors.extend(x)
-
-    def __str__(self) -> str:
-        res =  f"arg: {self.arg}, parents: {[x.data for x in self.parents]}, saved_tensors:{self.saved_tensors}"
-
-        return res
-
-
+"""
+Tensor
+"""
 class Tensor:
     def __init__(self,data,_children=()):
         if isinstance(data,(list,tuple)):
@@ -70,7 +54,29 @@ class Tensor:
         
     def mean(self):
         div = Tensor(np.array([1/self.data.size]))
-        return self.sum().mul(div)
+        return self.sum().mul(div) 
+
+"""
+反向传播上下类
+"""     
+class Context:
+    def __init__(self,arg,*tensors):
+        """
+        arg:Function 运算符、例如 Sum、Dot 等继承了 Function 的
+        parents:Tensor : 参与运算的元素
+        parents:ndarray
+        """
+        self.arg = arg
+        self.parents = tensors
+        self.saved_tensors=[]
+
+    def save_for_backward(self,*x):
+        self.saved_tensors.extend(x)
+
+    def __str__(self) -> str:
+        res =  f"arg: {self.arg}, parents: {[x.data for x in self.parents]}, saved_tensors:{self.saved_tensors}"
+
+        return res
 
 """
 运算符的基类
@@ -92,9 +98,6 @@ class Function:
         return ret
 
 def register(name,fxn):
-
-    # set method to Tensor cls
-    # sum.apply (fxn) (*x
     setattr(Tensor,name,partialmethod(fxn.apply,fxn))
 
         
@@ -175,7 +178,6 @@ class LogSoftmax(Function):
 
 register("logsoftmax",LogSoftmax)
 
-
 class Mul(Function):
     @staticmethod
     def forward(ctx, x,y):
@@ -207,94 +209,3 @@ class Conv2D(Function):
         cout,cin,H,W = w.shape
         ret = np.zeros((x.shape[0]))
 
-if __name__ == "__main__":
-    pass
-"""
-   import torch
-   import random
-
-
-   torch.manual_seed(42)
-    
-   random.seed(42)
-   np.random.seed(42)
-   
-
-   x = torch.randn((1,3),requires_grad=True)
-   w = torch.randn((3,3),requires_grad=True)
-
-   print(x)
-   print(w)
-   z = torch.matmul(x,w)
-
-   y = z.sum()
-   y.backward()
-   print(f"x:{x.grad}")
-   
-   
-   input_tensor = Tensor(x.detach().numpy())
-   weight_tensor = Tensor(w.detach().numpy())
-
-   z_tensor = input_tensor.dot(weight_tensor)
-
-   y_tensor = z_tensor.sum()
-   y_tensor.backward()
-   print(f"input:{input_tensor.grad}")
-
-
-   #validate logsoftmax works
-   from torch.nn.functional import log_softmax
-   x1 = torch.tensor([[1.,2.,1.]]).float()
-   print('-'*50)
-   print(log_softmax(x1,dim=1))
-
-
-   x_tensor = Tensor(x1.numpy())
-
-   print(x_tensor.logsoftmax().data)
-
-
-   #############################
-   # test ReLU
-   ############################
-
-   x2 = torch.randn(2).unsqueeze(0)
-   from torch.nn import functional as F
-   output = F.relu(x2)
-   print(output)
-   x2_tensor = Tensor(x2.numpy())
-   output = x2_tensor.relu()
-   print(output.data)
-
-
-    
-    np_arr = np.random.randn(1,3)
-
-    t1 = Tensor(np.array([1,2,3]))
-    res = t1.sum()
-    print(res.data)
-
-    t1_data = np.random.randn(1,3)
-    t2_data = np.random.randn(3,3)
-
-    t1 = Tensor(t1_data)
-    t2 = Tensor(t2_data)
-    res = t1.dot(t2)
-    print(res.data)
-    print(np_arr)
-
-    x1 = np.array([1,2,3])
-    x2 = Sum.forward(None,x1)
-    print(x2)
-    def f(*x):
-        res = []
-        res.extend(x)
-        return res
-    b = f([1,2,3],[2,3,5])
-    print(b)
-
-
-    a = [1,2,3] + list([2,3,5])
-    print(a)
-
-"""

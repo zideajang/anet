@@ -1,8 +1,8 @@
 import numpy as np
 
 from tqdm import trange
-from tensor import Tensor
-from datasets import fetch
+from anet.tensor import Tensor
+from anet.utils import fetch
 
 # 加载数据
 X_train = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
@@ -15,10 +15,22 @@ def layer_init(m, h):
   ret = np.random.uniform(-1., 1., size=(m,h))/np.sqrt(m*h)
   return ret.astype(np.float32)
 
-# 定义神经网络
-# 输入 (batch_size * (28*28))
-l1 = Tensor(layer_init(784, 128))
-l2 = Tensor(layer_init(128, 10))
+class ANet:
+  def __init__(self):
+    # 定义神经网络
+    # 输入 (batch_size * (28*28))
+    self.l1 = Tensor(layer_init(784, 128))
+    self.l2 = Tensor(layer_init(128, 10))
+
+  def forward(self,x):
+    x = x.dot(self.l1)
+    x = x.relu()
+    x = x.dot(self.l2)
+    out = x.logsoftmax()
+    return out 
+
+model = ANet()
+
 
 # 定义超参数
 lr = 0.01
@@ -33,36 +45,28 @@ for i in (t := trange(1000)):
   y[range(y.shape[0]),Y] = -1.0
   y = Tensor(y)
   
-  x = x.dot(l1)
-  x = x.relu()
-  x = x_l2 = x.dot(l2)
-  x = x.logsoftmax()
-  x = x.mul(y)
-  x = x.mean()
-  x.backward()
+  outs = model.forward(x)
+
+  #NLL loss function
+  loss = outs.mul(y).mean()
+  loss.backward()
   
-  loss = x.data
-  cat = np.argmax(x_l2.data, axis=1)
+  cat = np.argmax(outs.data, axis=1)
   accuracy = (cat == Y).mean()
   
   # SGD
-  l1.data = l1.data - lr*l1.grad
-  l2.data = l2.data - lr*l2.grad
+  model.l1.data = model.l1.data - lr*model.l1.grad
+  model.l2.data = model.l2.data - lr*model.l2.grad
   
+  loss = loss.data
   losses.append(loss)
   accuracies.append(accuracy)
   t.set_description("loss %.2f accuracy %.2f" % (loss, accuracy))
 
-def forward(x):
-  x = x.dot(l1.data)
-  x = np.maximum(x, 0)
-  x = x.dot(l2.data)
-  return x
-
 def numpy_eval():
-  Y_test_preds_out = forward(X_test.reshape((-1, 28*28)))
+  Y_test_preds_out = model.forward(X_test.reshape((-1, 28*28)))
   Y_test_preds = np.argmax(Y_test_preds_out, axis=1)
   return (Y_test == Y_test_preds).mean()
 
-print("test set accuracy is %f" % numpy_eval())
-
+accuracy = numpy_eval()
+print(f"test accuracy: {accuracy}")
