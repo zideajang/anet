@@ -20,6 +20,10 @@ class Context:
     def save_for_backward(self,*x):
         self.saved_tensors.extend(x)
 
+    def __str__(self) -> str:
+        res =  f"arg: {self.arg}, parents: {[x.data for x in self.parents]}, saved_tensors:{self.saved_tensors}"
+
+        return res
 
 
 class Tensor:
@@ -29,35 +33,41 @@ class Tensor:
 
         self.data = data
         self.grad = None
-
         self._ctx = None
 
     def __str__(self):
         return f"Tensor of shape {self.data.shape} with grad {self.grad}"
     
     def backward(self,allow_fill=True):
+
         if self._ctx is None:
             return
 
+        print(self.grad)
+        print(self._ctx)
+        print(self.data)
+        
+        
         if self.grad is None and allow_fill:
             assert self.data.size == 1
             self.grad = np.ones_like(self.data)
 
         assert(self.grad is not None)
-
-        # 
+    
         grads = self._ctx.arg.backward(self._ctx,self.grad)
-        print(grads)
         if len(self._ctx.parents) == 1:
             grads = [grads]
         
+        print(grads)
+        print("="*50)
         for t,g in zip(self._ctx.parents,grads):
-            print("111")
             if g.shape != t.data.shape:
                 print("grad shape must match tensor shape in %r, %r != %r" %(self._ctx.arg, g.shape, t.data.shape))
                 #assert(False) "print something"
             t.grad = g
             t.backward(False)
+
+        
     def mean(self):
         div = Tensor(np.array([1/self.data.size]))
         return self.sum().mul(div)
@@ -128,7 +138,7 @@ class Dot(Function):
 register("dot",Dot)
 
 """
-求和
+Sum 实现
 """
 class Sum(Function):
     @staticmethod
@@ -170,7 +180,6 @@ class Mul(Function):
     @staticmethod
     def forward(ctx, x,y):
         ctx.save_for_backward(x,y)
-    
         return x*y
 
     @staticmethod
@@ -180,9 +189,27 @@ class Mul(Function):
 
 register("mul",Mul)
 
+class Add(Function):
+    @staticmethod
+    def forward(ctx, x,y):
+        return x + y
+
+    @staticmethod
+    def backward(ctx,grad_output):
+        return grad_output,grad_output
+
+register("add",Add)
+
+# 实现卷积算子
+class Conv2D(Function):
+    @staticmethod
+    def forward(ctx, x,w):
+        cout,cin,H,W = w.shape
+        ret = np.zeros((x.shape[0]))
+
 if __name__ == "__main__":
-
-
+    pass
+"""
    import torch
    import random
 
@@ -239,11 +266,8 @@ if __name__ == "__main__":
    output = x2_tensor.relu()
    print(output.data)
 
-    
-
 
     
-""" 
     np_arr = np.random.randn(1,3)
 
     t1 = Tensor(np.array([1,2,3]))

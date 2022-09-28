@@ -3,7 +3,7 @@ from tensor import Tensor
 
 import requests, gzip, os, hashlib, numpy
 
-
+# 加载数据
 def fetch(url):
   fp = os.path.join("./tmp", hashlib.md5(url.encode('utf-8')).hexdigest())
   if not os.path.isfile(fp):
