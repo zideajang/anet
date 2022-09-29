@@ -26,11 +26,6 @@ class Tensor:
 
         if self._ctx is None:
             return
-
-        print(self.grad)
-        print(self._ctx)
-        print(self.data)
-        
         
         if self.grad is None and allow_fill:
             assert self.data.size == 1
@@ -42,8 +37,6 @@ class Tensor:
         if len(self._ctx.parents) == 1:
             grads = [grads]
         
-        print(grads)
-        print("="*50)
         for t,g in zip(self._ctx.parents,grads):
             if g.shape != t.data.shape:
                 print("grad shape must match tensor shape in %r, %r != %r" %(self._ctx.arg, g.shape, t.data.shape))
