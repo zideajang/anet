@@ -8,6 +8,11 @@ import numpy as np
 # basic classes
 
 """
+移除 Context ，将其功能融入到 Functions
+
+"""
+
+"""
 Tensor
 """
 class Tensor:
@@ -33,14 +38,14 @@ class Tensor:
 
         assert(self.grad is not None)
     
-        grads = self._ctx.arg.backward(self._ctx,self.grad)
+        grads = self._ctx.backward(self._ctx,self.grad)
         if len(self._ctx.parents) == 1:
             grads = [grads]
         
         for t,g in zip(self._ctx.parents,grads):
             if g.shape != t.data.shape:
                 print("grad shape must match tensor shape in %r, %r != %r" %(self._ctx.arg, g.shape, t.data.shape))
-                #assert(False) "print something"
+                assert(False)
             t.grad = g
             t.backward(False)
 
@@ -49,44 +54,36 @@ class Tensor:
         div = Tensor(np.array([1/self.data.size]))
         return self.sum().mul(div) 
 
+
+
 """
-反向传播上下类
-"""     
-class Context:
-    def __init__(self,arg,*tensors):
-        """
-        arg:Function 运算符、例如 Sum、Dot 等继承了 Function 的
-        parents:Tensor : 参与运算的元素
-        parents:ndarray
-        """
-        self.arg = arg
+运算符的基类
+"""
+class Function:
+
+    def __init__(self,*tensors):
         self.parents = tensors
         self.saved_tensors=[]
 
     def save_for_backward(self,*x):
         self.saved_tensors.extend(x)
 
-    def __str__(self) -> str:
-        res =  f"arg: {self.arg}, parents: {[x.data for x in self.parents]}, saved_tensors:{self.saved_tensors}"
-
-        return res
-
-"""
-运算符的基类
-"""
-class Function:
-    """
-    arg:Function
-
-    """
-    def apply(self:Tensor,arg,*x):
+    def apply(self,arg,*x):
         # initial Context
         # self is instance of Tensori
         # arg - sum, self- tensor
         # y = wx dot dot x.dot(w) self- x *x- w 
-        ctx = Context(arg,self,*x)
+
+        if type(arg) == Tensor:
+            op = self
+            x = [arg] + list(x)
+        else:
+            op = arg
+            x = [self] + list(x)
+        # ctx = Context(arg,self,*x)
+        ctx = op(*x)
         # dot.forward
-        ret = Tensor(arg.forward(ctx, self.data,*[t.data for t in x]))
+        ret = Tensor(op.forward(ctx,*[t.data for t in x]))
         ret._ctx = ctx
         return ret
 
@@ -195,10 +192,27 @@ class Add(Function):
 
 register("add",Add)
 
-# 实现卷积算子
+# 实现卷积操作
 class Conv2D(Function):
     @staticmethod
     def forward(ctx, x,w):
         cout,cin,H,W = w.shape
-        ret = np.zeros((x.shape[0]))
+        # x.shape[0] batch size
+        # cout number kernel
+        # out_H = (image_H + 2padding - kernel size) / stride +1 
+        ret = np.zeros((x.shape[0],cout,x.shape[2]-(H-1),x.shape[3]-(W-1)),dtype=w.dtype)
+        # Y,X 
+        for Y in range(ret.shape[2]):
+            for X in range(ret.shape[3]):
+                for j in range(H):
+                    for i in range(W):
+                        for c in range(cout):
+                            tx = x[:,:,Y+j,X+i]
+                            tw = w[c,:,j,i]
+                            ret[:,c,Y,X] += tx.dot(tw.reshape(-1,1).reshape(-1))
+        return ret
+    @staticmethod
+    def backward(ctx,grad_output):
+        pass
 
+register('conv2d',Conv2D)
