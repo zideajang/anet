@@ -1,5 +1,5 @@
 import numpy as np
-from anet.tensor import Tensor
+from anet_python.tensor import Tensor
 
 import requests, gzip, os, hashlib, numpy
 

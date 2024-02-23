@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from anet.tensor import Tensor
+from anet_python.tensor import Tensor
 
 """
 out = x@w

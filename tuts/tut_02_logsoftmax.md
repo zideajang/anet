@@ -1,5 +1,53 @@
 ## Softmax 求导
 
+### Context
+
+```python
+class Context:
+  def __init__(self, arg, *tensors):
+    self.arg = arg
+    self.parents = tensors
+    self.saved_tensors = []
+
+  def save_for_backward(self, *x):
+    self.saved_tensors.extend(x)
+```
+
+```python
+class Function:
+  def apply(self, arg, *x):
+    ctx = Context(arg, self, *x)
+    ret = Tensor(arg.forward(ctx, self.data, *[t.data for t in x]))
+    ret._ctx = ctx
+    return ret
+```
+- 
+每一个运算符(Sum, Add)都持有 Context 在 Context 中会保存
+
+
+```python
+class LogSoftmax(Function):
+  @staticmethod
+  def forward(ctx, input):
+    def logsumexp(x):
+      c = x.max(axis=1)
+      return c + np.log(np.exp(x-c.reshape((-1, 1))).sum(axis=1))
+    output = input - logsumexp(input)
+    ctx.save_for_backward(output)
+    return output
+
+  @staticmethod
+  def backward(ctx, grad_output):
+    output, = ctx.saved_tensors
+    return grad_output - np.exp(output)*grad_output.sum(axis=1).reshape((-1, 1))
+register('logsoftmax', LogSoftmax)
+```
+
+```python
+def register(name, fxn):
+  setattr(Tensor, name, partialmethod(fxn.apply, fxn))
+```
+
 $$
 softmax: \mathbb{R}^n \rightarrow \mathbb{R}^n
 $$

@@ -1,8 +1,13 @@
-## 深度学习框架
-参考
+# 从头实现深度学习框架
+## 目的
+参考 pytorch 以及 tinygrad 来实现一个深度学习框架，深入理解深度学习框架背景知识
+## 概述
+### 架构设计
 
-### 相关分享 
-- 关于 softmax 求导和 log softmax 可以在 tuts/softmax.md 找到
+### 课程目录
+- 关于《softmax 求导和 log softmax》 可以在 [softmax](./tuts/softmax.md) 找到更多详细内容
+
+
 
 ### todo
 - 整理代码
@@ -16,7 +21,7 @@
 - 卷积反向传播
 
 ### 相关资源
-#### 相关说明文档
+#### 相关 blog 分享
 
 [自己动手写一个神经网络(1)—Anet 诞生记](https://juejin.cn/post/7148771409177608199/)
 [深入浅出 Pytorch 系列 — 优化器的选择(2) Adagrad 、MSProp 和 adam](https://juejin.cn/post/7130601449381658631)

@@ -3,7 +3,7 @@
 from distutils.command.config import config
 from typing import List
 import numpy as np
-from anet.tensor import Tensor
+from anet_python.tensor import Tensor
 
 class Optimizer:
     def __init__(self,params:List[Tensor]):

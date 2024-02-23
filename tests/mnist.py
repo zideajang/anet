@@ -1,8 +1,8 @@
 import numpy as np
 
 from tqdm import trange
-from anet.tensor import Tensor
-from anet.utils import fetch
+from anet_python.tensor import Tensor
+from anet_python.utils import fetch
 
 # 加载数据
 X_train = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))

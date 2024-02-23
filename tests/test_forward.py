@@ -1,7 +1,7 @@
 from unittest import result
 import numpy as np
 
-from anet.tensor import Tensor
+from anet_python.tensor import Tensor
 import unittest
 
 # 测试前向传播

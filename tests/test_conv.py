@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 import unittest
-from anet.tensor import Tensor, Conv2D
+from anet_python.tensor import Tensor, Conv2D
 
 # 卷积测试用例
 class TestConvolution(unittest.TestCase):

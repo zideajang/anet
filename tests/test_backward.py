@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 import unittest
-from anet.tensor import Tensor
+from anet_python.tensor import Tensor
 
 class TestBackwardAndForward(unittest.TestCase):
 
