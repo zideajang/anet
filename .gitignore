@@ -1,3 +1,4 @@
 __pycache__
 notebooks
 anet_python/__pycache__
+*.ckpt
