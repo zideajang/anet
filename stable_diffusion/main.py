@@ -8,6 +8,10 @@ FILENAME = "sd-v1-4.ckpt"
 
 dat = fake_torch_load_zipped(open(FILENAME, "rb"), load_weights=False)
 
+for k,v in dat['state_dict'].items():
+    print(f"{str(v.shape):30s}",k)
+exit(0)
+
 class Normalize(nn.Module):
     def __init__(self,in_channels,num_groups=32) -> None:
         self.weight = torch.Tensor.uniform_(in_channels)
@@ -24,7 +28,6 @@ class ResnetBlock:
         self.norm1 = Normalize(in_channels)
 
 
-        if in_channels
 
 class Encoder:
     def __init__(self,decode=False) -> None:
