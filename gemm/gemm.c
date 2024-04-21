@@ -88,8 +88,6 @@ int main(void){
 
     uint64_t start = nanos();
 
-    
-
     uint64_t end = nanos();
     // printf("%d\n",end);
     double gflops = (2.0*N*N*N)*1e-9;
