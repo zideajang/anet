@@ -1,8 +1,5 @@
 __pycache__
 notebooks
 anet_python/__pycache__
-<<<<<<< HEAD
 conv/data/
-=======
 *.ckpt
->>>>>>> c690ce87975e1762daaf2362b6f4b664bc3f1df2
